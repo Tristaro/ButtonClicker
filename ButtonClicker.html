@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Clickable Button</title>
+  <style>
+    body {
+      text-align: center;
+    }
+    
+    #button {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background-color: #55aaff;
+      margin: 100px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      color: #ffffff;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    #counter {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 18px;
+    }
+    
+    #cps-counter {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 18px;
+      color: red;
+    }
+    
+    #reset-button, #finish-button {
+      margin: 20px auto;
+      width: 100px;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    
+    #click-text {
+      font-size: 18px;
+      margin-top: 20px;
+    }
+    
+    #highscore-board {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      text-align: left;
+    }
+    
+    #highscore-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    #highscore-board ol {
+      padding: 0;
+      margin: 0;
+      list-style-type: none;
+    }
+    
+    #highscore-board li {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    
+    #reset-highscore-button {
+      margin-top: 20px;
+      width: 120px;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="button"></div>
+  <div id="counter">Clicks: 0</div>
+  <div id="cps-counter">CPS: 0</div>
+  <button id="reset-button">Reset</button>
+  <button id="finish-button">Finish</button>
+  <div id="click-text">Click!</div>
+  <div id="highscore-board">
+    <div id="highscore-title">Highest CPS</div>
+    <ol></ol>
+    <button id="reset-highscore-button">Reset Highscores</button>
+  </div>
+  
+  <script>
+    var button = document.getElementById('button');
+    var counter = document.getElementById('counter');
+    var cpsCounter = document.getElementById('cps-counter');
+    var resetButton = document.getElementById('reset-button');
+    var finishButton = document.getElementById('finish-button');
+    var clickText = document.getElementById('click-text');
+    var highscoreBoard = document.querySelector('#highscore-board ol');
+    var resetHighscoreButton = document.getElementById('reset-highscore-button');
+    
+    var clickCount = 0;
+    var startTime = null;
+    var cps = 0;
+    var cpsIntervalId = null;
+    var highScores = [];
+    var isFinishClicked = false;
+    
+    button.addEventListener('click', function() {
+      if (cpsIntervalId !== null) {
+        button.style.backgroundColor = '#3388cc';
+      
+        setTimeout(function() {
+          button.style.backgroundColor = '#55aaff';
+        }, 100);
+      
+        clickCount++;
+        counter.textContent = 'Clicks: ' + clickCount;
+        
+        clickText.style.display = 'none';
+        clearTimeout(clickTimeout);
+        clickTimeout = setTimeout(function() {
+          clickText.style.display = 'block';
+        }, 1000);
+      }
+    });
+    
+    resetButton.addEventListener('click', function() {
+      clickCount = 0;
+      counter.textContent = 'Clicks: 0';
+      
+      startTime = null;
+      cps = 0;
+      cpsCounter.textContent = 'CPS: 0';
+      
+      clearInterval(cpsIntervalId);
+      cpsIntervalId = null;
+      
+      button.style.pointerEvents = 'auto';
+      cpsCounter.style.color = 'red';
+      clickText.style.display = 'block';
+      isFinishClicked = false;
+    });
+    
+    finishButton.addEventListener('click', function() {
+      if (!isFinishClicked) {
+        clearInterval(cpsIntervalId);
+        cpsIntervalId = null;
+        
+        button.style.pointerEvents = 'none';
+        cpsCounter.style.color = 'black';
+        clickText.style.display = 'none';
+        
+        if (cps > 0) {
+          highScores.push(cps);
+          highScores.sort(function(a, b) {
+            return b - a;
+          });
+          
+          if (highScores.length > 5) {
+            highScores.pop();
+          }
+          
+          updateHighscoreBoard();
+        }
+        
+        isFinishClicked = true;
+      }
+    });
+    
+    button.addEventListener('click', function() {
+      if (!startTime && cpsIntervalId === null) {
+        startTime = new Date().getTime();
+        cpsIntervalId = setInterval(function() {
+          var currentTime = new Date().getTime();
+          var elapsedTime = (currentTime - startTime) / 1000;
+          cps = clickCount / elapsedTime;
+          cpsCounter.textContent = 'CPS: ' + cps.toFixed(2);
+          
+          if (cpsIntervalId !== null) {
+            cpsCounter.style.color = 'green';
+          } else {
+            cpsCounter.style.color = 'red';
+          }
+        }, 1000);
+      }
+    });
+    
+    var clickTimeout = setTimeout(function() {
+      clickText.style.display = 'block';
+    }, 1000);
+    
+    resetHighscoreButton.addEventListener('click', function() {
+      highScores = [];
+      updateHighscoreBoard();
+    });
+    
+    function updateHighscoreBoard() {
+      highscoreBoard.innerHTML = '';
+      
+      for (var i = 0; i < highScores.length; i++) {
+        var li = document.createElement('li');
+        li.textContent = (i + 1) + '. ' + highScores[i].toFixed(2) + ' CPS';
+        highscoreBoard.appendChild(li);
+      }
+    }
+  </script>
+</body>
+</html>
